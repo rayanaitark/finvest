@@ -8,7 +8,7 @@ import { hashPassword, verifyPassword } from '../utils/crypto.js'
 const emailRegex = /^(?:[^<>()[\]\\.,;:\s@"]+(?:\.[^<>()[\]\\.,;:\s@"]+)*|".+")@(?:\[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\]|(?:[a-z\-0-9]+\.)+[a-z]{2,})$/i
 
 function buildVerificationUrl(validationToken) {
- return `${config.appBaseUrl}/users/verify-email?token=${validationToken}`
+return `${config.appBaseUrl}/verify-email?token=${validationToken}`
 }
 
 function withVerificationDebugData(payload, validationToken) {
