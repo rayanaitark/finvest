@@ -1,19 +1,18 @@
 <script setup>
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 
 const auth = useAuthStore()
+const router = useRouter()
 
 const email = ref('')
 const username = ref('')
 const password = ref('')
 const localError = ref('')
-const successData = ref(null)
 
 async function handleSubmit() {
   localError.value = ''
-  successData.value = null
 
   if (!email.value || !username.value || !password.value) {
     localError.value = 'Tous les champs sont requis'
@@ -26,14 +25,13 @@ async function handleSubmit() {
   }
 
   try {
-    const result = await auth.register({
+    await auth.register({
       email: email.value,
       username: username.value,
       password: password.value,
     })
-    successData.value = result
+    router.push({ name: 'login', query: { registered: '1' } })
   } catch {
-    // l'erreur est déjà dans auth.error
   }
 }
 </script>
