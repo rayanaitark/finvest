@@ -1,21 +1,41 @@
-// Petit wrapper autour de fetch.
-// J'aurais pu utiliser axios mais pour un projet de cette taille, fetch suffit
-// et ça évite une dépendance en plus.
-//
-// En dev, on passe par le proxy Vite (/api → localhost:3000)
-// En prod, on pointe directement sur l'URL Render via VITE_API_URL.
+// Wrapper autour de fetch.
+// Le token JWT est stocké en mémoire (pas en localStorage pour la sécu).
+// En dev local, le cookie marche aussi (same-origin via proxy Vite).
+// En prod (Netlify → Render, cross-origin), on envoie le token via Authorization header.
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
+// Token JWT en mémoire — perdu au refresh de la page, c'est voulu
+let authToken = null
+
+export function setToken(token) {
+  authToken = token
+}
+
+export function clearToken() {
+  authToken = null
+}
+
+export function getToken() {
+  return authToken
+}
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`
 
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  }
+
+  // Si on a un token, on l'envoie dans le header Authorization
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`
+  }
+
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    credentials: 'include', // Nécessaire pour envoyer/recevoir le cookie JWT
+    headers,
+    credentials: 'include', // On garde le cookie en fallback (dev local)
     ...options,
   }
 
@@ -23,11 +43,9 @@ async function request(endpoint, options = {}) {
   try {
     response = await fetch(url, config)
   } catch (err) {
-    // Problème réseau, serveur down, etc.
     throw new Error('Impossible de joindre le serveur')
   }
 
-  // Certaines routes renvoient du vide (DELETE), on protège le parse
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
