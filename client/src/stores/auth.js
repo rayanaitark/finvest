@@ -4,7 +4,7 @@ import * as api from '../services/api.js'
 
 // On utilise localStorage pour persister le token entre les refreshs.
 // C'est moins sécurisé que httpOnly cookie mais en cross-origin (Netlify/Render)
-// on n'a pas le choix. Pour un projet étudiant c'est acceptable.
+
 const STORAGE_KEY = 'finvest_token'
 
 function loadToken() {
