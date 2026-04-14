@@ -40,6 +40,10 @@ async function handleSubmit() {
         <p class="lede">Connectez-vous pour retrouver vos simulations.</p>
 
         <form class="mt-4" @submit.prevent="handleSubmit">
+          <div v-if="route.query.registered" class="alert alert-success">
+            Compte créé avec succès ! Connectez-vous.
+          </div>
+          
           <div v-if="localError || auth.error" class="alert alert-error">
             {{ localError || auth.error }}
           </div>
