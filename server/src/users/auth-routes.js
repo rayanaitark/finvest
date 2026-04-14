@@ -70,31 +70,24 @@ function authRoutes(app) {
       return reply.status(409).send({ error: 'Ce nom d\'utilisateur est déjà pris' })
     }
 
-    // Créer le hash du mot de passe et le token de validation
+    // Créer le hash du mot de passe
     const passwordHash = await hashPassword(password)
-    const validationToken = randomBytes(32).toString('hex')
 
-    // Créer l'utilisateur dans la base de données (compte non validé)
+    // Créer l'utilisateur dans la base de données
+    // Email auto-validé : on n'a pas de serveur SMTP configuré,
+    // donc on skip la vérification par mail pour simplifier le flow.
     const user = await User.create({
       email: normalizedEmail,
-      username: `${username}-${validationToken.slice(0, 6)}`,
+      username,
       passwordHash,
-      validationToken,
+      emailVerified: true,
+      validationToken: null,
     })
 
-    try {
-      await sendVerificationEmail(app, normalizedEmail, validationToken)
-    } catch (error) {
-      app.log.error({
-        err: error,
-        email: normalizedEmail,
-      }, 'Failed to send registration email')
-
-      return reply.status(503).send(withVerificationDebugData({
-        error: 'Compte créé, mais l\'email de validation n\'a pas pu être envoyé. Réessayez plus tard.',
-        email: user.email,
-      }, validationToken))
-    }
+    return reply.status(201).send({
+      message: 'Compte créé avec succès. Vous pouvez vous connecter.',
+      email: user.email,
+    })
 
     return reply.status(201).send(withVerificationDebugData({
       message: 'Utilisateur créé avec succès. Veuillez vérifier votre email pour confirmer votre compte.',
