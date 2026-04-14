@@ -23,7 +23,9 @@ async function authPlugin(app) {
 
   app.decorate('authenticate', async (request, reply) => {
     try {
-      await request.jwtVerify({ onlyCookie: true })
+      // On essaie d'abord le cookie (dev local / same-origin)
+      // puis le header Authorization: Bearer xxx (prod cross-origin)
+      await request.jwtVerify()
     } catch {
       return reply.status(401).send({ error: 'Authentification requise' })
     }
