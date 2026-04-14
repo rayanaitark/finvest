@@ -8,7 +8,7 @@ import { hashPassword, verifyPassword } from '../utils/crypto.js'
 const emailRegex = /^(?:[^<>()[\]\\.,;:\s@"]+(?:\.[^<>()[\]\\.,;:\s@"]+)*|".+")@(?:\[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\]|(?:[a-z\-0-9]+\.)+[a-z]{2,})$/i
 
 function buildVerificationUrl(validationToken) {
-return `${config.appBaseUrl}/verify-email?token=${validationToken}`
+  return `${config.appBaseUrl}/verify-email?token=${validationToken}`
 }
 
 function withVerificationDebugData(payload, validationToken) {
@@ -88,11 +88,6 @@ function authRoutes(app) {
       message: 'Compte créé avec succès. Vous pouvez vous connecter.',
       email: user.email,
     })
-
-    return reply.status(201).send(withVerificationDebugData({
-      message: 'Utilisateur créé avec succès. Veuillez vérifier votre email pour confirmer votre compte.',
-      email: user.email,
-    }, validationToken))
   })
 
   app.post('/resend-verification-email', async (request, reply) => {
@@ -182,7 +177,7 @@ function authRoutes(app) {
       return reply.status(403).send({ error: 'Veuillez valider votre adresse email avant de vous connecter' })
     }
 
-    // Générer un token JWT...
+    // Générer un token JWT
     const token = await reply.jwtSign({
       sub: user._id.toString(),
       email: user.email,
@@ -191,7 +186,7 @@ function authRoutes(app) {
       expiresIn: '24h',
     })
 
-    // ...et le stocker dans un cookie sécurisé
+    // Cookie pour le cas same-origin (dev local)
     reply.setCookie(config.jwt.cookieName, token, {
       path: '/',
       httpOnly: true,
@@ -199,7 +194,8 @@ function authRoutes(app) {
       secure: config.env === 'production',
     })
 
-    return reply.send({ message: 'Authentification réussie' })
+    // On renvoie aussi le token dans le body pour le cross-origin (prod Netlify/Render)
+    return reply.send({ message: 'Authentification réussie', token })
   })
 
   // Déconnexion : on efface le cookie JWT
